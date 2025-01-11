@@ -26,7 +26,7 @@
  *如果需要使用P54引脚,可以在board.c文件中的board_init()函数中删除SET_P54_RESRT即可
  */
  
-void main()
+/*void main()
 {
     WTST = 0;               //设置程序代码等待参数，赋值为0可将CPU执行程序的速度设置为最快
     
@@ -76,5 +76,63 @@ void main()
 	  keyScan();
 		}
 	}
-//}
+//}*/
+
+#include "headfile.h"
+#include "init.h"
+#include "key.h"
+#include "motor.h"
+#include "speed.h"
+#include "mycode.h"
+#include "UI.h"
+
+int main(void) {
+    // 系统初始化
+    init_all();
+    key_init();
+    UI_Disp();
+
+    // 主循环
+    while (1) {
+        // 按键扫描
+        keyScan();
+
+        // 传感器数据处理
+        channal_encoder();
+        ICM_OneOrderFilter();
+        get_distance();
+
+        // 速度控制
+        speed_control();
+
+        // 用户界面显示
+        UI_Disp();
+
+        // 特殊场景处理
+        if (start_flag == 1) {
+            // 出库控制
+            CK_Start();
+        } else if (RK_flag == 1) {
+            // 入库控制
+            RK_Stop();
+        } else if (BZ_flag == 1) {
+            // 避障控制
+            barrier_control();
+        } else if (RD_flag == 1) {
+            // 圆环控制
+            round_control();
+        } else if (SC_flag_L == 1 || SC_flag_R == 1) {
+            // 环岛控制
+            circle_control();
+        } else {
+            // 正常行驶
+            goForward();
+        }
+
+        // 延时，防止过快循环
+        delay_ms(10);
+    }
+
+    return 0;
+}
 
